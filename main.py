@@ -10,143 +10,129 @@ class Alignement:
     def __init__(self) -> None:
         pass
 
-    def load_img(self):
-        size = 40, 40
-        im1 = Image.open(r"c1.jpg").convert('L')
-        im2 = Image.open(r"c2.jpg").convert('L') 
-
-        im1.thumbnail(size, Image.Resampling.LANCZOS) 
-        im2.thumbnail(size, Image.Resampling.LANCZOS) 
-
-        # im1.show()
-        # print(np.array(im1))
-
-        al = self.get_alignement_sequence(np.array(im1), np.array(im2))
-
-        PIL_image = Image.fromarray(np.uint8(al)).convert('L')
-        PIL_image.show()
-        PIL_image.save('aligned.png')
-
-        # print(al)
-    
-    def dtw(self, s: list, r: list):
+    def load_img(self, source_img: str, reference_img: str):
         """
-        s and r are already array of columns"""
-        n, m = len(s), len(r)
-        dtw_matrix = np.zeros((n, m))
-        for i in range(n):
-            for j in range(m):
+            Charge les images, fait la conversion en niveaux de gris et redimensionne les images
+        """
+
+        img_size = 80, 80
+        self.source_img = Image.open(f"car_images/{source_img}.jpeg").convert('L')
+        self.reference_img = Image.open(f"car_images/{reference_img}.jpeg").convert('L')
+
+        self.source_img.thumbnail(img_size, Image.Resampling.LANCZOS)
+        self.reference_img.thumbnail(img_size, Image.Resampling.LANCZOS)
+
+    def execute_alignement(self, source_img: str, reference_img: str):
+        """
+            Execute la fonction pour charger l'image source et l'image de reference et la fonction de l'alignement.
+            Aussi, cree un nouvelle image et l'enregistre
+        """
+
+        self.load_img(source_img, reference_img)
+        result_image: numpy.ndarray = self.get_alignement_sequence(np.array(self.source_img), np.array(self.reference_img))
+
+        PIL_image = Image.fromarray(np.uint8(result_image)).convert('L')
+        PIL_image.show()
+        PIL_image.save(f"results/{source_img}-{reference_img}.png")
+    
+    def dtw(self, first_sequence: np.ndarray, second_sequence: np.ndarray) -> np.ndarray:
+        """
+            Crée la matrice des distances à partir de deux sequences
+        """
+
+        len_first_seq, len_second_seq = len(first_sequence), len(second_sequence)
+
+        dtw_matrix: numpy.ndarray = np.zeros((len_first_seq, len_second_seq))
+        
+        for i in range(len_first_seq):
+            for j in range(len_second_seq):
                 dtw_matrix[i, j] = np.inf
+
         dtw_matrix[0, 0] = 0
         
-        for i in range(1, n):
-            for j in range(1, m):
-                cost = self.compute_cost1(s[i], r[j])
-                last_min = np.min([dtw_matrix[i-1, j], dtw_matrix[i, j-1], dtw_matrix[i-1, j-1]])
+        for i in range(1, len_first_seq):
+            for j in range(1, len_second_seq):
+                cost: int = self.cost(first_sequence[i], second_sequence[j])
+                last_min: int = np.min([dtw_matrix[i-1, j], dtw_matrix[i, j-1], dtw_matrix[i-1, j-1]])
                 dtw_matrix[i, j] = cost + last_min
+
         return dtw_matrix
 
-    def get_path(self, dtw_matrix):
+    def get_path(self, dtw_matrix: np.ndarray) -> list:
+        """
+            Construit le chemin avec les points minimals de la matrice de distances
+        """
 
-        print(dtw_matrix)
-        
-        j = len(dtw_matrix[0]) -1
-        i = len(dtw_matrix) -1
-        path = [(i, j)]
-        while(not(i==0 and j ==0)):
-            print(i, j)
-            print(path)
-            a = (dtw_matrix[i-1, j], i-1, j)
-            b = (dtw_matrix[i, j-1], i, j-1)
-            c = (dtw_matrix[i-1, j-1], i-1, j-1)
-            d = [c, a, b]
+        columns_index: int = len(dtw_matrix[0]) - 1
+        rows_index: int = len(dtw_matrix) - 1
+        path: list = [(rows_index, columns_index)]
+
+        while(not(rows_index == 0 and columns_index == 0)):
+            above_value: tuple = (dtw_matrix[rows_index-1, columns_index], rows_index-1, columns_index)
+            left_value: tuple = (dtw_matrix[rows_index, columns_index-1], rows_index, columns_index-1)
+            diagonal_value: tuple = (dtw_matrix[rows_index-1, columns_index-1], rows_index-1, columns_index-1)
+            values_list: list = [above_value, diagonal_value, left_value]
+
             def get_element_cost(elem: tuple):
                 return elem[0]
             
-            d = sorted(d, key=get_element_cost)
-            print("d = ", d)
-            f = d[0]
-            s = d[1]
-            if(f[0] == s[0]):
-                if(((s[1] == i-1) and (s[2] == j-1)) ):
-                    f=s
-            i = f[1]
-            j = f[2]
-            print("f = ", f)
-            path.append( (i, j ) )
-        print(path)
+            values_list: list = sorted(values_list, key=get_element_cost)
+
+            smaller_value: tuple = values_list[0]
+            sec_smaller_value: tuple = values_list[1]
+
+            if(smaller_value[0] == sec_smaller_value[0]):
+                if(((sec_smaller_value[1] == rows_index-1) and (sec_smaller_value[2] == columns_index-1))):
+                    smaller_value = sec_smaller_value
+
+            rows_index = smaller_value[1]
+            columns_index = smaller_value[2]
+            path.append((rows_index, columns_index))
+
         return path
     
-    def get_alignement_sequence(self, s, r)->List:
-        ma = self.dtw(np.transpose(np.array(s)), np.transpose(np.array(r)))
+    def get_alignement_sequence(self, image_source: np.ndarray, image_reference: np.ndarray) -> np.ndarray:
+        """
+            Effectue l'alignement entre l'image source et l'image de référence
+        """
 
-        pa = self.get_path(ma)
-        pa.reverse()
-        # paa = pa[1:]
-        # pa = [(i-1, j-1) for (i, j) in paa]
+        dtw_matrix: numpy.ndarray = self.dtw(np.transpose(np.array(image_source)), np.transpose(np.array(image_reference)))
+        path: list = self.get_path(dtw_matrix)
+        path.reverse()
 
-        # log.getLogger().setLevel(log.INFO)
-        #log.debug ("pa reversed" )
-        al = np.zeros((len(s), len(r[0])))
-        print(al)
+        result_matrix: numpy.ndarray = np.zeros((len(image_source), len(image_reference[0])))
+        image_source = np.array(image_source)
 
-        ns = np.array(s)
-
-        for j in range(len(r[0])):
-            for p in pa:
-                # p = (sourcei, referencei)
-                cols, colr = p
-                if colr == j:
-                    al[:, j] = ns[:, cols]
+        for j in range(len(image_reference[0])):
+            for path_value in path:
+                source_column, reference_column = path_value
+                if reference_column == j:
+                    result_matrix[:, j] = image_source[:, source_column]
                     break
-        return al
+
+        return result_matrix
 
 
-
-    def compute_cost1(self, a: list, b: list) -> int:
+    def cost(self, column_u: np.ndarray, column_v: np.ndarray) -> int:
         """
-            a et b sont des colonnes. Ils contiennent des pixels
+            Calcule la distance euclidean entre deux colonnes. Pour l'image source: column_u et l'image de reference: column_v
         """
-        # difference de hauteurs des colonnes avec des pixels pleins
-        aa = [x for x in a if x!=255]
-        bb = [x for x in b if x!=255]
-        return abs(len(aa) - len(bb))
-    
-    def compute_cost2(self, a, b) -> int:
-        """
-            a et b sont des colonnes. Ils contiennent des pixels
-        """
-        # difference de hauteurs des colonnes avec des pixels pleins
-        
-        return round(abs(a-b), 1)
+
+        first_match_u: numpy.ndarray = np.where(column_u != 255)[0]
+        last_match_u: numpy.ndarray = np.where(reversed(column_u) != 255)[0]
+        first_match_v: numpy.ndarray = np.where(column_v != 255)[0]
+        last_match_v: numpy.ndarray = np.where(reversed(column_v) != 255)[0]
+
+        first_match_u = first_match_u[0] if len(first_match_u) != 0 else 0
+        last_match_u = last_match_u[0] if len(last_match_u) != 0 else 0
+        first_match_v = first_match_v[0] if len(first_match_v) != 0 else 0
+        last_match_v = last_match_v[0] if len(last_match_v) != 0 else 0
+
+        return abs(((len(column_u) - last_match_u) - first_match_u) - ((len(column_v) - last_match_v) - first_match_v))
 
 
 
-# a = Alignement()
-# x = [
-#     [1,2,3],
-#     [0,0,0],
-#     [1,7,8]
-# ]
-# y = [
-#     [2,2,2,3,4],
-#     [6,2,0,3,4],
-#     [2,0,2,3,4],
-#     [2,0,2,3,1],
-# ]
-
-# # u = [0, 3.4, 4.1, 1.2, 0.2, 0.1, 0.1]
-# # v = [0.5,4,3.3,4,4.3,1.7,0.4,0.3,0.2,0.1]
-# m = a.dtw(v, u)
-# print(m)
-# pa = a.get_path(m)
-# pa.reverse()
-# # paa = pa[1:]
-# # pa = [(i-1, j-1) for (i, j) in paa]
-# print(pa)
-# # a.load_img()
-
-
-
+name1 = "red-car"
+name2 = "old-car"
 a = Alignement()
-a.load_img()
+a.execute_alignement(name1, name2)
