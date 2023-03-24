@@ -25,7 +25,7 @@ class Alignement:
     def execute_alignement(self, source_img: str, reference_img: str):
         """
             Execute la fonction pour charger l'image source et l'image de reference et la fonction de l'alignement.
-            Aussi, cree un nouvelle image et l'enregistre
+            Aussi, cree une nouvelle image et l'enregistre
         """
 
         self.load_img(source_img, reference_img)
@@ -68,7 +68,7 @@ class Alignement:
         path: list = [(rows_index, columns_index)]
 
         while(not(rows_index == 0 and columns_index == 0)):
-            above_value: tuple = (dtw_matrix[rows_index-1, columns_index], rows_index-1, columns_index)
+            above_value: tuple = (dtw_matrix[rows_index-1, columns_index], rows_index-1, columns_index) # (cost, row_index, col_index)
             left_value: tuple = (dtw_matrix[rows_index, columns_index-1], rows_index, columns_index-1)
             diagonal_value: tuple = (dtw_matrix[rows_index-1, columns_index-1], rows_index-1, columns_index-1)
             values_list: list = [above_value, diagonal_value, left_value]
@@ -81,8 +81,8 @@ class Alignement:
             smaller_value: tuple = values_list[0]
             sec_smaller_value: tuple = values_list[1]
 
-            if(smaller_value[0] == sec_smaller_value[0]):
-                if(((sec_smaller_value[1] == rows_index-1) and (sec_smaller_value[2] == columns_index-1))):
+            if(smaller_value[0] == sec_smaller_value[0]): # if two 1st and 2nd values are same
+                if(((sec_smaller_value[1] == rows_index-1) and (sec_smaller_value[2] == columns_index-1))): # we choose the one in the diagonal
                     smaller_value = sec_smaller_value
 
             rows_index = smaller_value[1]
@@ -106,8 +106,8 @@ class Alignement:
         for j in range(len(image_reference[0])):
             for path_value in path:
                 source_column, reference_column = path_value
-                if reference_column == j:
-                    result_matrix[:, j] = image_source[:, source_column]
+                if reference_column == j: # we found amatch
+                    result_matrix[:, j] = image_source[:, source_column] # copy the column source_column innto result matrix at j
                     break
 
         return result_matrix
@@ -115,7 +115,10 @@ class Alignement:
 
     def cost(self, column_u: np.ndarray, column_v: np.ndarray) -> int:
         """
-            Calcule la distance euclidean entre deux colonnes. Pour l'image source: column_u et l'image de reference: column_v
+            Calcule la distance entre deux colonnes.
+            Pour l'image source: column_u et l'image de reference: column_v.
+            La distance calculée ici est la différence de taille des chaque colonne.
+            La hauteur représente le nombre maximum de pixel non vide (!=255 car 255 est considéré comme arriere plan)
         """
 
         first_match_u: numpy.ndarray = np.where(column_u != 255)[0]
