@@ -16,11 +16,11 @@ class Alignement:
         """
 
         img_size = 80, 80
-        self.source_img = Image.open(f"car_images/{source_img}.jpeg").convert('L')
-        self.reference_img = Image.open(f"car_images/{reference_img}.jpeg").convert('L')
+        self.source_img = Image.open(f"car_images/{source_img}.jpg").convert('L')
+        self.reference_img = Image.open(f"car_images/{reference_img}.jpg").convert('L')
 
         self.source_img.thumbnail(img_size, Image.Resampling.LANCZOS)
-        self.reference_img.thumbnail(img_size, Image.Resampling.LANCZOS)
+        self.reference_img.thumbnail((80, 120), Image.Resampling.LANCZOS)
 
     def execute_alignement(self, source_img: str, reference_img: str):
         """
@@ -30,10 +30,18 @@ class Alignement:
 
         self.load_img(source_img, reference_img)
         result_image: numpy.ndarray = self.get_alignement_sequence(np.array(self.source_img), np.array(self.reference_img))
+        result_image_interpolation = self.interpolation(np.array(self.source_img), np.array(self.reference_img))
 
         PIL_image = Image.fromarray(np.uint8(result_image)).convert('L')
-        PIL_image.show()
+        PIL_image.show("dtw")
+
+        PIL_image_interpol = Image.fromarray(np.uint8(result_image_interpolation)).convert('L')
+        PIL_image_interpol.show("interpolation")
+
+        
         PIL_image.save(f"results/{source_img}-{reference_img}.png")
+        PIL_image_interpol.save(f"results/{source_img}-{reference_img}-interpol.png")
+
     
     def dtw(self, first_sequence: np.ndarray, second_sequence: np.ndarray) -> np.ndarray:
         """
@@ -57,6 +65,16 @@ class Alignement:
                 dtw_matrix[i, j] = cost + last_min
 
         return dtw_matrix
+
+    def interpolation(self, image_source: np.ndarray, image_reference: np.ndarray):
+        result_matrix: np.ndarray = np.zeros((len(image_source), len(image_reference[0])))
+        s, r = np.transpose(np.array(image_source)), np.transpose(np.array(image_reference))
+        len_s, len_r = len(s), len(r)
+
+        for i in range(len_r):
+            j = floor(i*len_s/len_r)
+            result_matrix[:, i] = image_source[:, j]
+        return result_matrix
 
     def get_path(self, dtw_matrix: np.ndarray) -> list:
         """
@@ -135,7 +153,7 @@ class Alignement:
 
 
 
-name1 = "red-car"
-name2 = "old-car"
+name1 = "car1"
+name2 = "car4"
 a = Alignement()
 a.execute_alignement(name1, name2)
