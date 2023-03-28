@@ -20,7 +20,7 @@ class Alignement:
         self.reference_img = Image.open(f"car_images/{reference_img}.jpg").convert('L')
 
         self.source_img.thumbnail(img_size, Image.Resampling.LANCZOS)
-        self.reference_img.thumbnail((80, 120), Image.Resampling.LANCZOS)
+        self.reference_img.thumbnail((120, 80), Image.Resampling.LANCZOS)
 
     def execute_alignement(self, source_img: str, reference_img: str):
         """
@@ -35,12 +35,18 @@ class Alignement:
         PIL_image = Image.fromarray(np.uint8(result_image)).convert('L')
         PIL_image.show("dtw")
 
-        PIL_image_interpol = Image.fromarray(np.uint8(result_image_interpolation)).convert('L')
-        PIL_image_interpol.show("interpolation")
+        # PIL_image_interpol = Image.fromarray(np.uint8(result_image_interpolation)).convert('L')
+        # PIL_image_interpol.show("interpolation")
+
+        # PIL_image_interpol = Image.fromarray(np.uint8(self.source_img)).convert('L')
+        # PIL_image_interpol.show("source")
+
+        # PIL_image_interpol = Image.fromarray(np.uint8(self.reference_img)).convert('L')
+        # PIL_image_interpol.show("reference")
 
         
-        PIL_image.save(f"results/{source_img}-{reference_img}.png")
-        PIL_image_interpol.save(f"results/{source_img}-{reference_img}-interpol.png")
+        # PIL_image.save(f"results/{source_img}-{reference_img}.png")
+        # PIL_image_interpol.save(f"results/{source_img}-{reference_img}-interpol.png")
 
     
     def dtw(self, first_sequence: np.ndarray, second_sequence: np.ndarray) -> np.ndarray:
@@ -74,6 +80,7 @@ class Alignement:
         for i in range(len_r):
             j = floor(i*len_s/len_r)
             result_matrix[:, i] = image_source[:, j]
+
         return result_matrix
 
     def get_path(self, dtw_matrix: np.ndarray) -> list:
@@ -148,9 +155,17 @@ class Alignement:
         last_match_u = last_match_u[0] if len(last_match_u) != 0 else 0
         first_match_v = first_match_v[0] if len(first_match_v) != 0 else 0
         last_match_v = last_match_v[0] if len(last_match_v) != 0 else 0
-
+        
         return abs(((len(column_u) - last_match_u) - first_match_u) - ((len(column_v) - last_match_v) - first_match_v))
+        
 
+    def correlation(self, column_u: np.ndarray, column_v: np.ndarray) -> int:
+        result = column_u[:, np.newaxis] * column_v
+        len_u, len_v = len(column_u), len(column_v)
+        total_sum = np.sum(result)
+        total = total_sum / (len_u * len_v)
+        # print('result',total_sum, round(total))
+        return round(total)
 
 
 name1 = "car1"
