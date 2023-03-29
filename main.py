@@ -21,14 +21,15 @@ class Alignement:
         self.reference_img = Image.open(f"car_images/{reference_img}.jpg").convert('L')
         self.source_img = cv2.imread(f"car_images/{source_img}.jpeg")
 
-        self.source_img = self.source_img.resize((80,80))
+        # self.source_img = self.source_img.resize((80,80))
         self.reference_img = self.reference_img.resize((120, 80))
 
+        img = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
         ret, thresh1 = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) 
         # thresh = 180
         # im_bin = (np.array(self.source_img) > thresh) * 255
-
-        Image.fromarray(np.uint8(im_bin)).show()
+        cv2.imshow('Otsu Threshold', self.source_img)
+        # Image.fromarray(np.uint8(im_bin)).show()
         # self.reference_img.show()
 
     def execute_alignement(self, source_img: str, reference_img: str):
@@ -39,18 +40,18 @@ class Alignement:
 
         self.load_img(source_img, reference_img)
 
-        result_image: numpy.ndarray = self.get_alignement_sequence(np.array(self.source_img), np.array(self.reference_img))
-        result_image_interpolation = self.interpolation(np.array(self.source_img), np.array(self.reference_img))
+        # result_image: numpy.ndarray = self.get_alignement_sequence(np.array(self.source_img), np.array(self.reference_img))
+        # result_image_interpolation = self.interpolation(np.array(self.source_img), np.array(self.reference_img))
 
-        PIL_image = Image.fromarray(np.uint8(result_image)).convert('L')
-        PIL_image.show("dtw")
+        # PIL_image = Image.fromarray(np.uint8(result_image)).convert('L')
+        # PIL_image.show("dtw")
 
-        PIL_image_interpol = Image.fromarray(np.uint8(result_image_interpolation)).convert('L')
-        PIL_image_interpol.show("interpolation")
+        # PIL_image_interpol = Image.fromarray(np.uint8(result_image_interpolation)).convert('L')
+        # PIL_image_interpol.show("interpolation")
 
         
-        PIL_image.save(f"results/{source_img}-{reference_img}-dtw-hauteur.png")
-        PIL_image_interpol.save(f"results/{source_img}-{reference_img}-interpol.png")
+        # PIL_image.save(f"results/{source_img}-{reference_img}-dtw-hauteur.png")
+        # PIL_image_interpol.save(f"results/{source_img}-{reference_img}-interpol.png")
 
     
     def dtw(self, first_sequence: np.ndarray, second_sequence: np.ndarray) -> np.ndarray:
