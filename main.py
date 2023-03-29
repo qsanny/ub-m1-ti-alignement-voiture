@@ -11,6 +11,9 @@ class Alignement:
     def __init__(self) -> None:
         pass
 
+    def classify(self):
+        pass
+
     def load_img(self, source_img: str, reference_img: str):
         """
             Charge les images, fait la conversion en niveaux de gris et redimensionne les images
