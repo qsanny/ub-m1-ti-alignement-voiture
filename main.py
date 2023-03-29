@@ -12,7 +12,7 @@ class Alignement:
         pass
 
     def classify(self):
-        pass
+        return 0
 
     def load_img(self, source_img: str, reference_img: str):
         """
