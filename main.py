@@ -16,21 +16,22 @@ class Alignement:
             Charge les images, fait la conversion en niveaux de gris et redimensionne les images
         """
 
-        img_size = 80, 80
-        # self.source_img = Image.open(f"car_images/{source_img}.jpeg").convert('L')
-        self.reference_img = Image.open(f"car_images/{reference_img}.jpg").convert('L')
-        self.source_img = cv2.imread(f"car_images/{source_img}.jpeg")
+        dim = 300, 100
+        self.source_img = cv2.imread(f"car_images/{source_img}.jpg")
+        self.reference_img = cv2.imread(f"car_images/{reference_img}.jpg")
 
-        # self.source_img = self.source_img.resize((80,80))
-        self.reference_img = self.reference_img.resize((120, 80))
+        self.source_img_o = cv2.resize(self.source_img, dim, interpolation = cv2.INTER_AREA)
+        self.reference_img_o = cv2.resize(self.reference_img, dim, interpolation = cv2.INTER_AREA)
 
-        img = cv2.cvtColor(self.source_img, cv2.COLOR_BGR2GRAY)
-        ret, thresh1 = cv2.threshold(img, 120, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU) 
-        # thresh = 180
-        # im_bin = (np.array(self.source_img) > thresh) * 255
-        cv2.imshow('Otsu Threshold', self.source_img)
-        # Image.fromarray(np.uint8(im_bin)).show()
-        # self.reference_img.show()
+        self.source_img = cv2.cvtColor(self.source_img_o, cv2.COLOR_BGR2GRAY)
+        ret, self.source_img = cv2.threshold(self.source_img, 120, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+
+        self.reference_img = cv2.cvtColor(self.reference_img_o, cv2.COLOR_BGR2GRAY)
+        ret, self.reference_img = cv2.threshold(self.reference_img, 120, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        # cv2.imshow('Otsu Threshold', thresh1)
+
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
     def execute_alignement(self, source_img: str, reference_img: str):
         """
@@ -40,12 +41,18 @@ class Alignement:
 
         self.load_img(source_img, reference_img)
 
-        # result_image: numpy.ndarray = self.get_alignement_sequence(np.array(self.source_img), np.array(self.reference_img))
-        # result_image_interpolation = self.interpolation(np.array(self.source_img), np.array(self.reference_img))
+        result_image: numpy.ndarray = self.get_alignement_sequence(np.array(self.source_img), np.array(self.reference_img))
+        result_image_interpolation = self.interpolation(np.array(self.source_img), np.array(self.reference_img))
 
         # PIL_image = Image.fromarray(np.uint8(result_image)).convert('L')
         # PIL_image.show("dtw")
 
+        img_concate_Hori=np.concatenate((result_image,result_image_interpolation, result_image_interpolation),axis=1)
+        cv2.imshow('Otsu Threshold', img_concate_Hori)
+
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    
         # PIL_image_interpol = Image.fromarray(np.uint8(result_image_interpolation)).convert('L')
         # PIL_image_interpol.show("interpolation")
 
@@ -131,13 +138,17 @@ class Alignement:
         path: list = self.get_path(dtw_matrix)
         path.reverse()
 
+        # result_matrix: numpy.ndarray = np.zeros((len(image_source), len(image_reference[0]), 3), np.uint8)
         result_matrix: numpy.ndarray = np.zeros((len(image_source), len(image_reference[0])))
+        # print(result_matrix[0,0])
+        # image_source = np.array(self.source_img_o)
         image_source = np.array(image_source)
 
         for j in range(len(image_reference[0])):
             for path_value in path:
                 source_column, reference_column = path_value
                 if reference_column == j: # we found amatch
+                    # print((image_source[:, source_column]))
                     result_matrix[:, j] = image_source[:, source_column] # copy the column source_column innto result matrix at j
                     break
 
@@ -172,7 +183,7 @@ class Alignement:
         return round(total)
 
 
-name1 = "old-car"
+name1 = "car1"
 name2 = "car3"
 a = Alignement()
 a.execute_alignement(name1, name2)
