@@ -29,8 +29,8 @@ class Alignement:
         self.source_img_o = cv2.resize(source_img, DIM_SOURCE, interpolation = cv2.INTER_AREA)
         self.reference_img_o = cv2.resize(ref_img, DIM_REF, interpolation = cv2.INTER_AREA)
 
-        self.source_img_arr = np.array(self.source_img_o)
-        self.reference_img_arr = np.array(self.reference_img_o)
+        source_img_arr = np.array(self.source_img_o)
+        reference_img_arr = np.array(self.reference_img_o)
         self.is_color : bool = is_color
 
         source_img_gray = cv2.cvtColor(self.source_img_o, cv2.COLOR_BGR2GRAY)
@@ -40,13 +40,13 @@ class Alignement:
         # put colored images into bin
         if is_color:
             _ , binary_img_s = cv2.threshold(source_img_gray, 120, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            self.source_img_arr = np.array(binary_img_s)
+            source_img_arr = np.array(binary_img_s)
 
             _ , binary_img_r = cv2.threshold(reference_img_gray, 120, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-            self.reference_img_arr = np.array(binary_img_r)
+            reference_img_arr = np.array(binary_img_r)
         else:
-            self.source_img_arr = np.array(source_img_gray)
-            self.reference_img_arr = np.array(reference_img_gray)
+            source_img_arr = np.array(source_img_gray)
+            reference_img_arr = np.array(reference_img_gray)
 
             
         # cv2.imshow('Otsu Threshold', thresh1)
@@ -54,7 +54,7 @@ class Alignement:
         # cv2.waitKey(0)
         # cv2.destroyAllWindows()
 
-        return self.source_img_arr, self.reference_img_arr
+        return source_img_arr, reference_img_arr
     
     def gen_result_matrix(self, s: np.ndarray, r) -> np.ndarray:
         w, h = (len(s), len(r[0]))
@@ -77,8 +77,6 @@ class Alignement:
 
         # PIL_image = Image.fromarray(np.uint8(result_image_dtw_height_cost)).convert('L')
         # PIL_image.show("dtw")
-
-        empty_img = np.zeros_like(source_img_np)
 
         # result_concat = cv2.hconcat([result_image_dtw_height_cost, result_image_dtw_correlation_cost, result_image_interpolation])
         # original_concat = cv2.hconcat([empty_img, empty_img, empty_img])
@@ -112,9 +110,10 @@ class Alignement:
         # plt.show()
         s_name = source_img_path.split('/')[1].split('.')[0]
         r_name = reference_img_path.split('/')[1].split('.')[0]
-        if not os.path.exists('resultats_all'):
-            os.makedirs('resultats_all')
-        plt.savefig(f'resultats_all/{s_name}_{r_name}')
+        results_folder = f"results/{'color' if is_color else 'binari'}"
+        if not os.path.exists(results_folder):
+            os.makedirs(results_folder)
+        plt.savefig(f'{results_folder}/{s_name}_{r_name}')
         # cv2.imshow('Résultats', all_concat)
 
         # cv2.waitKey(0)
@@ -184,11 +183,11 @@ class Alignement:
 
         return path
     
-    def get_interpolation_alignement(self, image_source: np.ndarray, image_reference: np.ndarray):
-        s, r = np.transpose(image_source), np.transpose(image_reference)
+    def get_interpolation_alignement(self, image_source_np: np.ndarray, image_reference_np: np.ndarray):
+        s, r = np.transpose(image_source_np), np.transpose(image_reference_np)
         len_s, len_r = len(s), len(r)
 
-        result_matrix = self.gen_result_matrix(image_source, image_reference)
+        result_matrix = self.gen_result_matrix(image_source_np, image_reference_np)
         image_source_o_arr = np.array(self.source_img_o)
 
         for i in range(len_r):
@@ -202,7 +201,7 @@ class Alignement:
             Effectue l'alignement entre l'image source et l'image de référence
         """
         transpose_source, transpose_ref = np.transpose(np.array(image_source)), np.transpose(np.array(image_reference))
-        dtw_matrix: numpy.ndarray = self.dtw(transpose_source, transpose_ref, cost)
+        dtw_matrix: np.ndarray = self.dtw(transpose_source, transpose_ref, cost)
         path: list = self.get_path(dtw_matrix)
         path.reverse()
         
@@ -247,22 +246,23 @@ class Alignement:
         return round(total)
 
 
-    def main(self):
+def main():
 
-        colored_images = "colored_images" # remplacer par le chemin du dossier à lister
-        bin_images = "bin_images"
-        
-        folders = [colored_images]
-        for folder in folders:
-            files = os.listdir(folder)
-            # Affichage des noms de fichiers un par un
-            for (i, file1)  in enumerate(files):
-                for file2 in files[i+1:]:
-                    print(file1, file2)
-                    a.execute_alignement(f"{folder}/{file1}", f"{folder}/{file2}", is_color=(folder=="colored_images"))
+    colored_images = "colored_images" # remplacer par le chemin du dossier à lister
+    bin_images = "bin_images"
+    a = Alignement()
+    
+    folders = [colored_images]
+    for folder in folders:
+        files = os.listdir(folder)
+        # Affichage des noms de fichiers un par un
+        for (i, file1)  in enumerate(files):
+            for file2 in files[i+1:]:
+                print(file1, file2)
+                a.execute_alignement(f"{folder}/{file1}", f"{folder}/{file2}", is_color=(folder==colored_images))
 
-name1 = "car1"
-name2 = "car3"
-a = Alignement()
-a.main()
+# name1 = "car1"
+# name2 = "car3"
+# a = Alignement()
 # a.execute_alignement(name1, name2)
+main()
