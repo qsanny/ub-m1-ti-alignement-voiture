@@ -261,7 +261,7 @@ def main():
                 print(file1, file2)
                 a.execute_alignement(f"{folder}/{file1}", f"{folder}/{file2}", is_color=(folder==colored_images))
 
-main()
+# main()
 
 
 class ImageData:
@@ -323,4 +323,78 @@ class KNN:
             print(f"{image_de_test} ---> {thedist[-1][0]} \n\n ")
 
 
-knn = KNN(5)
+class KMEANS:
+    def __init__(self, k = 2) -> None:
+        self.k = 2
+
+        data_directory = "kmeans"
+
+        all_images = os.listdir(data_directory)
+        # print(all_images)
+        dataset = []
+
+        a = Alignement()
+        for source in all_images:
+            dist = 0
+            for ref  in all_images:
+                source_img_np, ref_img_np = a.load_img(f"{data_directory}/{source}", f"{data_directory}/{ref}", False)
+                transpose_source, transpose_ref = np.transpose(np.array(source_img_np)), np.transpose(np.array(ref_img_np))
+                dist = dist + a.dtw(transpose_source, transpose_ref, a.cost_height_diff)[-1][-1]
+
+            data = dict()
+            data = {
+                "image": source,
+                "desc": dist/len(all_images),
+                "cluster": None
+            }
+
+            dataset.append(data)
+        # print(dataset)
+        noyau = []
+        ma = max(dataset, key=lambda x: x['desc'])['desc']
+        mi = min(dataset, key=lambda x: x['desc'])['desc']
+        pas = (ma-mi) / (k-1)
+        for i in range(0, k):
+            noyau.append((i*pas) + mi )
+        print(noyau)
+
+        j = 0
+        while(True):
+            j+=1
+            print(j)
+            clusters = []
+            for n in noyau:
+                clusters.append([])
+            
+            for image in dataset:
+                image_cluster = 0
+                dist_mini = abs(image['desc'] - noyau[image_cluster])
+                for i, n in enumerate(noyau):
+                    if abs(image['desc'] - n) < dist_mini:
+                        image_cluster = i
+                        dist_mini = abs(image['desc'] - n)
+                image['cluster'] = image_cluster
+                clusters[image_cluster].append(image)
+            new_kernel = []
+            for cluster in clusters:
+                new_kernel.append (sum(map(lambda x: x['desc'], cluster) )/ len(cluster))
+
+            if(new_kernel == noyau):
+                break 
+
+            noyau = [x for x in new_kernel]
+
+        
+        # print(dataset)
+        print(clusters)
+
+        for i, cluster in enumerate(clusters):
+            print('cluster ', i)
+            for image in cluster:
+                print(f"\t{image['image']}")
+        
+
+
+# knn = KNN(5)
+
+kmeans = KMEANS(2)
