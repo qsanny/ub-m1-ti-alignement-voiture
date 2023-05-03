@@ -252,7 +252,7 @@ def main():
     bin_images = "bin_images"
     a = Alignement()
     
-    folders = [colored_images]
+    folders = [bin_images]
     for folder in folders:
         files = os.listdir(folder)
         # Affichage des noms de fichiers un par un
@@ -261,8 +261,66 @@ def main():
                 print(file1, file2)
                 a.execute_alignement(f"{folder}/{file1}", f"{folder}/{file2}", is_color=(folder==colored_images))
 
-# name1 = "car1"
-# name2 = "car3"
-# a = Alignement()
-# a.execute_alignement(name1, name2)
 main()
+
+
+class ImageData:
+    def __init__(self, n, c, d) -> None:
+        """ n = chemin vers l'image
+            c = la classe de l'image
+            d = la distance finaelemnt calculee par dtw avec limga de test
+        """
+        self.n = n
+        self.c = c
+        self.d = d
+    
+    def __str__(self) -> str:
+        return f"{self.c}, {self.d}"
+
+class KNN:
+    def __init__(self, k = 3) -> None:
+        self.k = k
+
+        data_directory = "knn/classes"
+        classes = os.listdir(data_directory)
+
+        dataset = []
+        for c in classes:
+            images = os.listdir(f"{data_directory}/{c}")
+            for i in images:
+                dataset.append( ImageData( f"{data_directory}/{c}/{i}", c, 0 ))
+        
+        # print(dataset)
+
+        test_directory = "knn/test"
+        test_images = os.listdir(test_directory)
+
+        a = Alignement()
+
+
+        for ti in test_images:
+            image_de_test = f"{test_directory}/{ti}"
+            for image_de_donne in dataset:
+                source_img_np, ref_img_np = a.load_img(image_de_test, image_de_donne.n, False)
+                # print(image_de_test, 'et ', image_de_donne.n, end=" --> ")
+                transpose_source, transpose_ref = np.transpose(np.array(source_img_np)), np.transpose(np.array(ref_img_np))
+                dist = a.dtw(transpose_source, transpose_ref, a.cost_height_diff)[-1][-1]
+                image_de_donne.d = dist
+                # print(dist)
+
+
+            dataset.sort(key=lambda x: x.d)
+            # print([str(item) for item in dataset])
+            
+            thedist = dict()
+            for data in dataset[:k]:
+                thedist[data.c] = thedist.get(data.c, 0) + 1
+
+            thedist = sorted(thedist.items(), key=lambda item: item[1])
+
+            # print(thedist)
+
+            print(f"{image_de_test} ---> {thedist[-1][0]} \n\n ")
+
+
+knn = KNN(5)
