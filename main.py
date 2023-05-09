@@ -246,7 +246,7 @@ class Alignement:
         return round(total)
 
 
-def main():
+def generetate_aligned_image():
 
     colored_images = "colored_images" # remplacer par le chemin du dossier à lister
     bin_images = "bin_images"
@@ -394,7 +394,7 @@ class KMEANS:
                 print(f"\t{image['image']}")
         
 
-
+# generetate_aligned_image()
 # knn = KNN(5)
 
 kmeans = KMEANS(2)
