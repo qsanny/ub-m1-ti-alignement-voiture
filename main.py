@@ -300,27 +300,33 @@ class KNN:
 
         for ti in test_images:
             image_de_test = f"{test_directory}/{ti}"
-            for image_de_donne in dataset:
-                source_img_np, ref_img_np = a.load_img(image_de_test, image_de_donne.n, False)
-                # print(image_de_test, 'et ', image_de_donne.n, end=" --> ")
-                transpose_source, transpose_ref = np.transpose(np.array(source_img_np)), np.transpose(np.array(ref_img_np))
-                dist = a.dtw(transpose_source, transpose_ref, a.cost_height_diff)[-1][-1]
-                image_de_donne.d = dist
-                # print(dist)
-
-
-            dataset.sort(key=lambda x: x.d)
-            # print([str(item) for item in dataset])
+            self.test_image(image_de_test, dataset, a)
             
-            thedist = dict()
-            for data in dataset[:k]:
-                thedist[data.c] = thedist.get(data.c, 0) + 1
 
-            thedist = sorted(thedist.items(), key=lambda item: item[1])
 
-            # print(thedist)
+    def test_image(self, image, dataset, a,  c = None):
+        image_de_test = image
+        for image_de_donne in dataset:
+            source_img_np, ref_img_np = a.load_img(image_de_test, image_de_donne.n, False)
+            # print(image_de_test, 'et ', image_de_donne.n, end=" --> ")
+            transpose_source, transpose_ref = np.transpose(np.array(source_img_np)), np.transpose(np.array(ref_img_np))
+            dist = a.dtw(transpose_source, transpose_ref, a.cost_height_diff)[-1][-1]
+            image_de_donne.d = dist
+            # print(dist)
 
-            print(f"{image_de_test} ---> {thedist[-1][0]} \n\n ")
+
+        dataset.sort(key=lambda x: x.d)
+        # print([str(item) for item in dataset])
+        
+        thedist = dict()
+        for data in dataset[:k]:
+            thedist[data.c] = thedist.get(data.c, 0) + 1
+
+        thedist = sorted(thedist.items(), key=lambda item: item[1])
+
+        # print(thedist)
+
+        print(f"{image_de_test} ---> {thedist[-1][0]} \n\n ")
 
 
 class KMEANS:
@@ -395,6 +401,6 @@ class KMEANS:
         
 
 # generetate_aligned_image()
-# knn = KNN(5)
+knn = KNN(5)
 
-kmeans = KMEANS(2)
+# kmeans = KMEANS(2)
