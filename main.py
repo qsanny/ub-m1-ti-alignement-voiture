@@ -296,17 +296,27 @@ class KNN:
         test_images = os.listdir(test_directory)
 
         a = Alignement()
+        self.stat = {
+            "all": 0,
+            "true": 0
+        }
 
 
         for ti in test_images:
             image_de_test = f"{test_directory}/{ti}"
+            self.stat['all'] +=1
             self.test_image(image_de_test, dataset, a)
+        
+        print(f"ratio = {self.stat['true']}/ { self.stat['all']} = {(self.stat['true'] / self.stat['all'])*100 } %")
             
 
 
-    def test_image(self, image, dataset, a,  c = None):
+    def test_image(self, image: str, dataset, a,  c = None):
         image_de_test = image
         for image_de_donne in dataset:
+            if image_de_test.split('/')[-1] == image_de_donne.n.split('/')[-1]:
+                c = image_de_donne.c
+                continue
             source_img_np, ref_img_np = a.load_img(image_de_test, image_de_donne.n, False)
             # print(image_de_test, 'et ', image_de_donne.n, end=" --> ")
             transpose_source, transpose_ref = np.transpose(np.array(source_img_np)), np.transpose(np.array(ref_img_np))
@@ -319,14 +329,18 @@ class KNN:
         # print([str(item) for item in dataset])
         
         thedist = dict()
-        for data in dataset[:k]:
+        for data in dataset[:self.k]:
             thedist[data.c] = thedist.get(data.c, 0) + 1
 
         thedist = sorted(thedist.items(), key=lambda item: item[1])
 
         # print(thedist)
+        # nous avons trié du plus peti au plus grans. Ce qui nous interesse c'est la plus grande distance donc le dernier
+        predicted_class = thedist[-1][0]
+        is_correct_class = predicted_class == c
+        self.stat['true'] +=1 if is_correct_class else 0
 
-        print(f"{image_de_test} ---> {thedist[-1][0]} \n\n ")
+        print(f"{image_de_test} ---> {predicted_class} / {c} : {is_correct_class} \n\n ")
 
 
 class KMEANS:
