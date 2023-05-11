@@ -21,13 +21,37 @@ class Alignement:
         DIM_SOURCE = 40, 40
         DIM_REF = 90, 40
 
+
+        
+
         # load images
         source_img = cv2.imread(f"{source_img_path}")
         ref_img = cv2.imread(f"{reference_img_path}")
 
+        HEIGHT = 45
+        # scale_percent = 60 # percent of original size
+
+        scale_percent = int(100* HEIGHT / source_img.shape[0])
+        width_s = int(source_img.shape[1] * scale_percent / 100)
+        height_s = int(source_img.shape[0] * scale_percent / 100)
+        dim_s = (width_s, height_s)
+
+        # print(source_img.shape, dim_s )
+
+        scale_percent = int(100* HEIGHT/ ref_img.shape[0])
+        width_r = int(ref_img.shape[1] * scale_percent / 100)
+        height_r = int(ref_img.shape[0] * scale_percent / 100)
+        dim_r = (width_r, height_r)
+
+        # print(ref_img.shape, dim_r )
+
+
         # resize images
-        self.source_img_o = cv2.resize(source_img, DIM_SOURCE, interpolation = cv2.INTER_AREA)
-        self.reference_img_o = cv2.resize(ref_img, DIM_REF, interpolation = cv2.INTER_AREA)
+        self.source_img_o = cv2.resize(source_img, dim_s, interpolation = cv2.INTER_AREA)
+        self.reference_img_o = cv2.resize(ref_img, dim_r, interpolation = cv2.INTER_AREA)
+
+        # self.source_img_o = cv2.resize(source_img, DIM_SOURCE, interpolation = cv2.INTER_AREA)
+        # self.reference_img_o = cv2.resize(ref_img, DIM_REF, interpolation = cv2.INTER_AREA)
 
         source_img_arr = np.array(self.source_img_o)
         reference_img_arr = np.array(self.reference_img_o)
@@ -92,6 +116,8 @@ class Alignement:
 
         axs[0, 1].imshow(self.reference_img_o)
         axs[0, 1].set_title('reference')
+
+        axs[0, 2].remove()
 
         axs[1, 0].imshow(result_image_dtw_height_cost)
         axs[1, 0].set_title('dtw: longueur diff')
@@ -414,7 +440,7 @@ class KMEANS:
                 print(f"\t{image['image']}")
         
 
-# generetate_aligned_image()
-knn = KNN(5)
+generetate_aligned_image()
+# knn = KNN(5)
 
 # kmeans = KMEANS(2)
