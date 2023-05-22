@@ -278,7 +278,7 @@ def generetate_aligned_image():
     bin_images = "bin_images"
     a = Alignement()
     
-    folders = [bin_images]
+    folders = [bin_images, colored_images]
     for folder in folders:
         files = os.listdir(folder)
         # Affichage des noms de fichiers un par un
@@ -402,12 +402,12 @@ class KMEANS:
         pas = (ma-mi) / (k-1)
         for i in range(0, k):
             noyau.append((i*pas) + mi )
-        print(noyau)
+        # print(noyau)
 
         j = 0
         while(True):
             j+=1
-            print(j)
+            # print(j)
             clusters = []
             for n in noyau:
                 clusters.append([])
@@ -432,7 +432,7 @@ class KMEANS:
 
         
         # print(dataset)
-        print(clusters)
+        # print(clusters)
 
         for i, cluster in enumerate(clusters):
             print('cluster ', i)
@@ -440,8 +440,11 @@ class KMEANS:
                 print(f"\t{image['image']}")
         
 
-generetate_aligned_image()
-
-# knn = KNN(5)
-
-# kmeans = KMEANS(2)
+while True:
+    i = int(input('1- Alignement \n2- KNN \n3- KMEANS\n'))
+    if i == 1:
+        generetate_aligned_image()
+    if i == 2:
+        knn = KNN(3)
+    if i == 3:
+        kmeans = KMEANS(2)
