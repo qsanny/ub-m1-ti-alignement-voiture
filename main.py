@@ -34,14 +34,14 @@ class Alignement:
         scale_percent = int(100* HEIGHT / source_img.shape[0])
         width_s = int(source_img.shape[1] * scale_percent / 100)
         height_s = int(source_img.shape[0] * scale_percent / 100)
-        dim_s = (width_s, height_s)
+        dim_s = (width_s, HEIGHT)
 
         # print(source_img.shape, dim_s )
 
         scale_percent = int(100* HEIGHT/ ref_img.shape[0])
         width_r = int(ref_img.shape[1] * scale_percent / 100)
         height_r = int(ref_img.shape[0] * scale_percent / 100)
-        dim_r = (width_r, height_r)
+        dim_r = (width_r, HEIGHT)
 
         # print(ref_img.shape, dim_r )
 
@@ -152,7 +152,7 @@ class Alignement:
         # PIL_image.save(f"results/{source_img}-{reference_img}-dtw-hauteur.png")
         # PIL_image_interpol.save(f"results/{source_img}-{reference_img}-interpol.png")
 
-    
+
     def dtw(self, first_sequence: np.ndarray, second_sequence: np.ndarray, cost_function: "function") -> np.ndarray:
         """
             Crée la matrice des distances à partir de deux sequences
@@ -382,7 +382,7 @@ class KMEANS:
         a = Alignement()
         for source in all_images:
             dist = 0
-            for ref  in all_images:
+            for ref in all_images:
                 source_img_np, ref_img_np = a.load_img(f"{data_directory}/{source}", f"{data_directory}/{ref}", False)
                 transpose_source, transpose_ref = np.transpose(np.array(source_img_np)), np.transpose(np.array(ref_img_np))
                 dist = dist + a.dtw(transpose_source, transpose_ref, a.cost_height_diff)[-1][-1]
@@ -441,6 +441,7 @@ class KMEANS:
         
 
 generetate_aligned_image()
+
 # knn = KNN(5)
 
 # kmeans = KMEANS(2)
